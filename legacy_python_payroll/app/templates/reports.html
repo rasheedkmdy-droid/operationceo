@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Reports & Statutory Compliance</h1>
+            <p class="text-sm text-slate-500 mt-1">Audit-ready registers, statutory challan summaries, and payout disbursement files for <b>{{ active_month }}</b></p>
+        </div>
+    </div>
+
+    <!-- Export Action Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Card 1: Bank Disbursement Sheet -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-building-columns"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-900">Corporate Bank Payout File (Excel)</h3>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Formatted for bulk NEFT/RTGS salary file upload directly into Corporate Banking portals (HDFC Corporate, ICICI CMS, SBI CMP, Axis Bank). Contains Beneficiary Name, Account Number, IFSC, and Net Take-home pay.
+                </p>
+                
+                <div class="mt-4 bg-slate-50 rounded-lg p-3 text-xs text-slate-600 space-y-1">
+                    <div class="flex justify-between"><span>Total Beneficiaries:</span> <b>{{ summary.employee_count }} Staff</b></div>
+                    <div class="flex justify-between"><span>Total Net Payout:</span> <b class="text-emerald-700">₹ {{ "{:,.2f}".format(summary.total_net_pay) }}</b></div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <a href="/export/bank-excel?month={{ active_month }}" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition shadow-sm flex items-center justify-center">
+                    <i class="fa-solid fa-file-excel mr-2 text-sm"></i> Download Bank Payout Sheet (.xlsx)
+                </a>
+            </div>
+        </div>
+
+        <!-- Card 2: Form T Wage Register -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col justify-between">
+            <div>
+                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-900">Monthly Wage Register (Form T)</h3>
+                <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                    Statutory salary register required under Indian Labor Laws and MSME compliance inspections. Itemizes working days, pro-rated basic, HRA, all allowances, PF, ESI, PT, TDS, and employer CTC cost.
+                </p>
+
+                <div class="mt-4 bg-slate-50 rounded-lg p-3 text-xs text-slate-600 space-y-1">
+                    <div class="flex justify-between"><span>Total Gross Wages:</span> <b class="text-slate-900">₹ {{ "{:,.2f}".format(summary.total_gross) }}</b></div>
+                    <div class="flex justify-between"><span>Total Statutory Withheld:</span> <b class="text-red-600">₹ {{ "{:,.2f}".format(summary.total_deductions) }}</b></div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100">
+                <a href="/export/wage-register?month={{ active_month }}" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2.5 px-4 rounded-lg transition shadow-sm flex items-center justify-center">
+                    <i class="fa-solid fa-file-excel mr-2 text-sm"></i> Download Form T Wage Register (.xlsx)
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Statutory Challan Summary Breakdown -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+        <h3 class="text-base font-bold text-slate-900 mb-1 flex items-center">
+            <i class="fa-solid fa-shield-halved text-blue-600 mr-2"></i> Statutory Deposit Summary (For CA / Filing)
+        </h3>
+        <p class="text-xs text-slate-500 mb-4">Values required for monthly EPFO ECR, ESIC Monthly Challan, and State PT Return</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- EPF -->
+            <div class="p-4 rounded-lg bg-blue-50/60 border border-blue-200">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-blue-900 text-sm">EPFO / PF Contribution</span>
+                    <span class="text-xs font-mono bg-blue-200/50 text-blue-800 px-2 py-0.5 rounded">12% + 12%</span>
+                </div>
+                <div class="mt-3 space-y-1.5 text-xs">
+                    <div class="flex justify-between text-slate-600"><span>Employee Share:</span> <span class="font-semibold text-slate-900">₹ {{ "{:,.2f}".format(summary.total_pf_ee) }}</span></div>
+                    <div class="flex justify-between text-slate-600"><span>Employer Share:</span> <span class="font-semibold text-slate-900">₹ {{ "{:,.2f}".format(summary.total_pf_er) }}</span></div>
+                    <div class="pt-2 border-t border-blue-200/60 flex justify-between font-bold text-blue-950">
+                        <span>Total PF Deposit:</span>
+                        <span>₹ {{ "{:,.2f}".format(summary.total_pf_ee + summary.total_pf_er) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ESIC -->
+            <div class="p-4 rounded-lg bg-emerald-50/60 border border-emerald-200">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-emerald-900 text-sm">ESIC Insurance</span>
+                    <span class="text-xs font-mono bg-emerald-200/50 text-emerald-800 px-2 py-0.5 rounded">0.75% + 3.25%</span>
+                </div>
+                <div class="mt-3 space-y-1.5 text-xs">
+                    <div class="flex justify-between text-slate-600"><span>Employee Share:</span> <span class="font-semibold text-slate-900">₹ {{ "{:,.2f}".format(summary.total_esi_ee) }}</span></div>
+                    <div class="flex justify-between text-slate-600"><span>Employer Share:</span> <span class="font-semibold text-slate-900">₹ {{ "{:,.2f}".format(summary.total_esi_er) }}</span></div>
+                    <div class="pt-2 border-t border-emerald-200/60 flex justify-between font-bold text-emerald-950">
+                        <span>Total ESIC Deposit:</span>
+                        <span>₹ {{ "{:,.2f}".format(summary.total_esi_ee + summary.total_esi_er) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PT & TDS -->
+            <div class="p-4 rounded-lg bg-purple-50/60 border border-purple-200">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-purple-900 text-sm">State PT & TDS (Sec 192)</span>
+                    <span class="text-xs font-mono bg-purple-200/50 text-purple-800 px-2 py-0.5 rounded">Tax Withheld</span>
+                </div>
+                <div class="mt-3 space-y-1.5 text-xs">
+                    <div class="flex justify-between text-slate-600"><span>Professional Tax (PT):</span> <span class="font-semibold text-slate-900">₹ {{ "{:,.2f}".format(summary.total_pt) }}</span></div>
+                    <div class="flex justify-between text-slate-600"><span>Income Tax TDS:</span> <span class="font-semibold text-slate-900">₹ {{ "{:,.2f}".format(summary.total_tds) }}</span></div>
+                    <div class="pt-2 border-t border-purple-200/60 flex justify-between font-bold text-purple-950">
+                        <span>Total Tax Deducted:</span>
+                        <span>₹ {{ "{:,.2f}".format(summary.total_pt + summary.total_tds) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Individual Payslips Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Individual Employee PDF Payslips &bull; Month: {{ active_month }}
+            </span>
+            <span class="text-xs text-slate-500">Official branded PDFs with Net Pay in words & authorized signature block</span>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            {% for emp in slips %}
+            <div class="p-3.5 flex items-center justify-between hover:bg-slate-50 transition">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs">
+                        {{ emp.employee_id[-3:] }}
+                    </div>
+                    <div>
+                        <div class="text-xs font-bold text-slate-900">{{ emp.full_name }} ({{ emp.employee_id }})</div>
+                        <div class="text-[11px] text-slate-500">{{ emp.designation }} &bull; Net Take-home: <b class="text-slate-800">₹ {{ "{:,.2f}".format(emp.net_pay) }}</b></div>
+                    </div>
+                </div>
+                <a href="/payslip/pdf/{{ emp.employee_id }}?month={{ active_month }}" target="_blank"
+                   class="bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-200 transition flex items-center">
+                    <i class="fa-solid fa-file-pdf text-red-500 mr-1.5"></i> Download PDF
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Hero / Welcome Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-blue-900 to-slate-900 rounded-2xl p-6 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <i class="fa-solid fa-circle-check mr-1 text-[10px]"></i> Active Pay Cycle
+                </span>
+                <span class="text-xs text-slate-300">Month: <b>{{ active_month }}</b></span>
+            </div>
+            <h1 class="text-2xl font-bold mt-2">MSME Payroll Overview</h1>
+            <p class="text-sm text-slate-300 mt-1">
+                Managing <b>{{ stats.employee_count }} employees</b> under {{ company.company_name }}.
+            </p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <a href="/attendance?month={{ active_month }}" class="bg-white/10 hover:bg-white/20 text-white text-sm font-medium px-4 py-2.5 rounded-lg border border-white/20 transition flex items-center">
+                <i class="fa-solid fa-clock mr-2 text-xs"></i> 1. Attendance & LOP
+            </a>
+            <a href="/payroll?month={{ active_month }}" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2.5 rounded-lg shadow-md transition flex items-center">
+                <i class="fa-solid fa-play mr-2 text-xs"></i> 2. Run Payroll
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Net Payout -->
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Net Salary Payout</span>
+                <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-wallet"></i>
+                </span>
+            </div>
+            <div class="mt-3">
+                <div class="text-2xl font-extrabold text-slate-900">₹ {{ "{:,.2f}".format(stats.total_net_pay) }}</div>
+                <p class="text-xs text-slate-500 mt-1">Direct Bank Disbursement Amount</p>
+            </div>
+        </div>
+
+        <!-- Total Gross -->
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Total Gross Wages</span>
+                <span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                </span>
+            </div>
+            <div class="mt-3">
+                <div class="text-2xl font-extrabold text-slate-900">₹ {{ "{:,.2f}".format(stats.total_gross) }}</div>
+                <p class="text-xs text-slate-500 mt-1">Gross Earned Wages</p>
+            </div>
+        </div>
+
+        <!-- Total Deductions / Statutory -->
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Total Deductions</span>
+                <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </span>
+            </div>
+            <div class="mt-3">
+                <div class="text-2xl font-extrabold text-slate-900">₹ {{ "{:,.2f}".format(stats.total_deductions) }}</div>
+                <p class="text-xs text-slate-500 mt-1">PF, ESI, PT & TDS Withheld</p>
+            </div>
+        </div>
+
+        <!-- Total Employer CTC Cost -->
+        <div class="bg-white rounded-xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between text-slate-500 text-xs font-semibold uppercase tracking-wider">
+                <span>Total Employer CTC</span>
+                <span class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-building-columns"></i>
+                </span>
+            </div>
+            <div class="mt-3">
+                <div class="text-2xl font-extrabold text-slate-900">₹ {{ "{:,.2f}".format(stats.total_ctc) }}</div>
+                <p class="text-xs text-slate-500 mt-1">Gross + Employer PF/ESI Benefits</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statutory Breakdown & Action Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Statutory Summary Card -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-bold text-slate-800 flex items-center">
+                    <i class="fa-solid fa-gavel text-blue-600 mr-2"></i> Statutory Liability Breakdown
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">Compliance summary for {{ active_month }}</p>
+
+                <div class="mt-4 space-y-3">
+                    <div class="flex justify-between items-center text-sm py-1.5 border-b border-slate-100">
+                        <span class="text-slate-600 flex items-center"><span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>Employee PF (12%):</span>
+                        <span class="font-semibold text-slate-800">₹ {{ "{:,.2f}".format(stats.total_pf_ee) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm py-1.5 border-b border-slate-100">
+                        <span class="text-slate-600 flex items-center"><span class="w-2 h-2 rounded-full bg-blue-700 mr-2"></span>Employer PF (12%):</span>
+                        <span class="font-semibold text-slate-800">₹ {{ "{:,.2f}".format(stats.total_pf_er) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm py-1.5 border-b border-slate-100">
+                        <span class="text-slate-600 flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>Employee ESI (0.75%):</span>
+                        <span class="font-semibold text-slate-800">₹ {{ "{:,.2f}".format(stats.total_esi_ee) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm py-1.5 border-b border-slate-100">
+                        <span class="text-slate-600 flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-700 mr-2"></span>Employer ESI (3.25%):</span>
+                        <span class="font-semibold text-slate-800">₹ {{ "{:,.2f}".format(stats.total_esi_er) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm py-1.5 border-b border-slate-100">
+                        <span class="text-slate-600 flex items-center"><span class="w-2 h-2 rounded-full bg-purple-500 mr-2"></span>Professional Tax (PT):</span>
+                        <span class="font-semibold text-slate-800">₹ {{ "{:,.2f}".format(stats.total_pt) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm py-1.5">
+                        <span class="text-slate-600 flex items-center"><span class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span>TDS / Tax Withheld:</span>
+                        <span class="font-semibold text-slate-800">₹ {{ "{:,.2f}".format(stats.total_tds) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-200 flex justify-between items-center text-xs text-slate-500">
+                <span>Status: <b class="{{ 'text-emerald-600' if stats.status == 'LOCKED' else 'text-amber-600' }}">{{ stats.status }}</b></span>
+                <a href="/reports?month={{ active_month }}" class="text-blue-600 hover:underline font-medium">View Form T &rarr;</a>
+            </div>
+        </div>
+
+        <!-- Deliverables & Quick Exports -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 lg:col-span-2 flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-bold text-slate-800 flex items-center">
+                    <i class="fa-solid fa-file-export text-emerald-600 mr-2"></i> Monthly Payroll Deliverables
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">One-click downloads for bank transfer, audit registers, and payslips</p>
+
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Bank File -->
+                    <a href="/export/bank-excel?month={{ active_month }}" class="flex items-start p-3.5 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 transition group">
+                        <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center mr-3 flex-shrink-0 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-file-excel text-base"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-slate-800 group-hover:text-blue-600">Bank Transfer Sheet</div>
+                            <p class="text-xs text-slate-500 mt-0.5">Formatted for NEFT bulk upload (HDFC, ICICI, SBI)</p>
+                        </div>
+                    </a>
+
+                    <!-- Wage Register -->
+                    <a href="/export/wage-register?month={{ active_month }}" class="flex items-start p-3.5 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 transition group">
+                        <div class="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center mr-3 flex-shrink-0 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-table-list text-base"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-slate-800 group-hover:text-blue-600">Wage Register (Form T)</div>
+                            <p class="text-xs text-slate-500 mt-0.5">Comprehensive audit ledger for Labor & Tax compliance</p>
+                        </div>
+                    </a>
+
+                    <!-- Employee Directory -->
+                    <a href="/employees" class="flex items-start p-3.5 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 transition group">
+                        <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center mr-3 flex-shrink-0 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-id-card text-base"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-slate-800 group-hover:text-blue-600">10 Employee Profiles</div>
+                            <p class="text-xs text-slate-500 mt-0.5">Manage bank account, PAN, UAN & salary breakup</p>
+                        </div>
+                    </a>
+
+                    <!-- Company Profile -->
+                    <a href="/company" class="flex items-start p-3.5 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50 transition group">
+                        <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center mr-3 flex-shrink-0 group-hover:scale-110 transition">
+                            <i class="fa-solid fa-building text-base"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-semibold text-slate-800 group-hover:text-blue-600">Company & MSME Setup</div>
+                            <p class="text-xs text-slate-500 mt-0.5">Udyam No, PAN, TAN, PF, ESIC & Signatory details</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                <span>Tip: Process and review payroll before locking the cycle.</span>
+                <a href="/payroll?month={{ active_month }}" class="font-medium text-blue-600 hover:underline">Go to Payroll Processor &rarr;</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10 Employees Summary Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+                <h2 class="text-base font-bold text-slate-900">Current Employee Roster (10 Staff)</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Salary summary & status for pay period {{ active_month }}</p>
+            </div>
+            <a href="/employees" class="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition">
+                <i class="fa-solid fa-user-plus mr-1"></i> Add / Edit Employees
+            </a>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-50 border-b border-slate-200 uppercase tracking-wider text-[11px] font-semibold text-slate-500">
+                    <tr>
+                        <th class="py-3 px-4">EMP ID</th>
+                        <th class="py-3 px-4">Employee Name</th>
+                        <th class="py-3 px-4">Department & Role</th>
+                        <th class="py-3 px-4 text-right">Fixed Gross</th>
+                        <th class="py-3 px-4 text-center">PF / ESI</th>
+                        <th class="py-3 px-4 text-right">Earned Gross</th>
+                        <th class="py-3 px-4 text-right">Deductions</th>
+                        <th class="py-3 px-4 text-right font-bold text-slate-700">Net Pay</th>
+                        <th class="py-3 px-4 text-center">Payslip</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for row in employee_rows %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 px-4 font-mono font-medium text-slate-800">{{ row.id }}</td>
+                        <td class="py-3 px-4">
+                            <div class="font-semibold text-slate-900">{{ row.full_name }}</div>
+                            <div class="text-[11px] text-slate-400">{{ row.bank_name }} - {{ row.account_number }}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div class="text-slate-800">{{ row.designation }}</div>
+                            <div class="text-[11px] text-slate-400">{{ row.department }}</div>
+                        </td>
+                        <td class="py-3 px-4 text-right font-medium">₹ {{ "{:,.2f}".format(row.fixed_gross) }}</td>
+                        <td class="py-3 px-4 text-center">
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                PF
+                            </span>
+                            {% if row.esic_opted %}
+                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 ml-1">
+                                ESI
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-right font-medium text-slate-800">₹ {{ "{:,.2f}".format(row.earned_gross) }}</td>
+                        <td class="py-3 px-4 text-right font-medium text-red-600">₹ {{ "{:,.2f}".format(row.total_deductions) }}</td>
+                        <td class="py-3 px-4 text-right font-bold text-slate-900">₹ {{ "{:,.2f}".format(row.net_pay) }}</td>
+                        <td class="py-3 px-4 text-center">
+                            <a href="/payslip/pdf/{{ row.id }}?month={{ active_month }}" target="_blank"
+                               class="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition" title="Download PDF Payslip">
+                                <i class="fa-solid fa-file-pdf mr-1 text-red-500"></i> PDF
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

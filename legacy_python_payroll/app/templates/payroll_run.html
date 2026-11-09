@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider {{ 'bg-emerald-100 text-emerald-800 border border-emerald-300' if run.status == 'LOCKED' else 'bg-amber-100 text-amber-800 border border-amber-300' }}">
+                    Status: {{ run.status }}
+                </span>
+                <span class="text-xs text-slate-500">Pay Period: <b class="text-slate-800">{{ active_month }}</b></span>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900 mt-1">Payroll Processing & Approval</h1>
+            <p class="text-sm text-slate-500 mt-0.5">Execute the MSME statutory engine, audit pro-rata computations, and disburse</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Re-compute Button -->
+            <form method="POST" action="/payroll/compute?month={{ active_month }}">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-sm transition flex items-center">
+                    <i class="fa-solid fa-arrows-rotate mr-1.5"></i> Compute / Refresh Payroll
+                </button>
+            </form>
+
+            <!-- Lock / Unlock Button -->
+            {% if run.status != 'LOCKED' %}
+            <form method="POST" action="/payroll/lock?month={{ active_month }}" onsubmit="return confirm('Are you sure you want to Lock this pay cycle? This prevents unintended modifications.');">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-sm transition flex items-center">
+                    <i class="fa-solid fa-lock mr-1.5"></i> Lock & Finalize
+                </button>
+            </form>
+            {% else %}
+            <form method="POST" action="/payroll/unlock?month={{ active_month }}" onsubmit="return confirm('Unlock pay cycle for modifications?');">
+                <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-sm transition flex items-center">
+                    <i class="fa-solid fa-lock-open mr-1.5"></i> Unlock Cycle
+                </button>
+            </form>
+            {% endif %}
+
+            <!-- Quick Export Dropdown or direct buttons -->
+            <a href="/export/bank-excel?month={{ active_month }}" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition flex items-center">
+                <i class="fa-solid fa-file-excel text-emerald-400 mr-1.5"></i> Bank NEFT Sheet
+            </a>
+            <a href="/export/wage-register?month={{ active_month }}" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-2.5 rounded-lg transition flex items-center">
+                <i class="fa-solid fa-table text-blue-400 mr-1.5"></i> Form T Register
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary KPI strip -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div>
+            <div class="text-[11px] font-semibold text-slate-500 uppercase">Total Net Disbursement</div>
+            <div class="text-xl font-extrabold text-emerald-600 mt-0.5">₹ {{ "{:,.2f}".format(run.total_net_pay) }}</div>
+        </div>
+        <div>
+            <div class="text-[11px] font-semibold text-slate-500 uppercase">Gross Wages Earned</div>
+            <div class="text-xl font-extrabold text-slate-900 mt-0.5">₹ {{ "{:,.2f}".format(run.total_gross) }}</div>
+        </div>
+        <div>
+            <div class="text-[11px] font-semibold text-slate-500 uppercase">Total Statutory Withheld</div>
+            <div class="text-xl font-extrabold text-red-600 mt-0.5">₹ {{ "{:,.2f}".format(run.total_deductions) }}</div>
+        </div>
+        <div>
+            <div class="text-[11px] font-semibold text-slate-500 uppercase">Total Company Cost (CTC)</div>
+            <div class="text-xl font-extrabold text-indigo-700 mt-0.5">₹ {{ "{:,.2f}".format(run.total_ctc) }}</div>
+        </div>
+    </div>
+
+    <!-- Detailed Payroll Computation Register -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Audited Calculation Sheet &bull; {{ slips | length }} Staff Records
+            </span>
+            <span class="text-xs text-slate-500">
+                Formula: Net Pay = Earned Gross &minus; (PF + ESI + PT + TDS + Advances)
+            </span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+                <thead class="bg-slate-100 border-b border-slate-200 uppercase text-[10px] font-semibold text-slate-500">
+                    <tr>
+                        <th class="py-3 px-3">Emp ID</th>
+                        <th class="py-3 px-3">Employee Name</th>
+                        <th class="py-3 px-2 text-center">Days (Pay/Tot)</th>
+                        <th class="py-3 px-3 text-right">Earned Basic</th>
+                        <th class="py-3 px-3 text-right">Earned Gross</th>
+                        <th class="py-3 px-2 text-right">PF (12%)</th>
+                        <th class="py-3 px-2 text-right">ESI (0.75%)</th>
+                        <th class="py-3 px-2 text-right">PT</th>
+                        <th class="py-3 px-2 text-right">TDS/Adv</th>
+                        <th class="py-3 px-3 text-right font-bold text-red-600">Total Ded.</th>
+                        <th class="py-3 px-3 text-right font-bold text-slate-900 bg-blue-50/50">Net Pay</th>
+                        <th class="py-3 px-3 text-right text-indigo-700">Company CTC</th>
+                        <th class="py-3 px-2 text-center">Payslip</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for s in slips %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-2.5 px-3 font-mono font-bold text-slate-900">{{ s.employee_id }}</td>
+                        <td class="py-2.5 px-3">
+                            <div class="font-semibold text-slate-900">{{ s.full_name }}</div>
+                            <div class="text-[10px] text-slate-400">{{ s.designation }}</div>
+                        </td>
+                        <td class="py-2.5 px-2 text-center">
+                            <span class="font-medium {{ 'text-red-600 font-bold' if s.lop_days > 0 else 'text-slate-700' }}">
+                                {{ s.payable_days }} / {{ s.total_working_days }}
+                            </span>
+                            {% if s.lop_days > 0 %}
+                            <div class="text-[9px] text-red-500">({{ s.lop_days }} LOP)</div>
+                            {% endif %}
+                        </td>
+                        <td class="py-2.5 px-3 text-right">₹ {{ "{:,.2f}".format(s.earned_basic) }}</td>
+                        <td class="py-2.5 px-3 text-right font-medium text-slate-900">₹ {{ "{:,.2f}".format(s.earned_gross) }}</td>
+                        <td class="py-2.5 px-2 text-right text-slate-700">₹ {{ "{:,.2f}".format(s.ded_pf) }}</td>
+                        <td class="py-2.5 px-2 text-right text-slate-700">₹ {{ "{:,.2f}".format(s.ded_esi) }}</td>
+                        <td class="py-2.5 px-2 text-right text-slate-700">₹ {{ "{:,.2f}".format(s.ded_pt) }}</td>
+                        <td class="py-2.5 px-2 text-right text-slate-700">₹ {{ "{:,.2f}".format(s.ded_tds + s.ded_advance) }}</td>
+                        <td class="py-2.5 px-3 text-right font-semibold text-red-600">₹ {{ "{:,.2f}".format(s.total_deductions) }}</td>
+                        <td class="py-2.5 px-3 text-right font-extrabold text-blue-900 bg-blue-50/50">₹ {{ "{:,.2f}".format(s.net_pay) }}</td>
+                        <td class="py-2.5 px-3 text-right font-medium text-indigo-700">₹ {{ "{:,.2f}".format(s.employer_cost) }}</td>
+                        <td class="py-2.5 px-2 text-center">
+                            <a href="/payslip/pdf/{{ s.employee_id }}?month={{ active_month }}" target="_blank"
+                               class="inline-flex items-center text-[11px] text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition" title="View / Print PDF Payslip">
+                                <i class="fa-solid fa-file-pdf mr-1 text-red-500"></i> PDF
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
